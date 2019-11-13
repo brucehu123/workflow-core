@@ -77,6 +77,8 @@ namespace WorkflowCore.Services.BackgroundTasks
                     if (activeTasks.ContainsKey(item))
                     {
                         secondPasses.Add(item);
+                        if (!EnableSecondPasses)
+                            await QueueProvider.QueueWork(item, Queue);
                         continue;
                     }
 
@@ -113,7 +115,7 @@ namespace WorkflowCore.Services.BackgroundTasks
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex.Message);
+                    Logger.LogError(ex, ex.Message);
                 }
             }
 

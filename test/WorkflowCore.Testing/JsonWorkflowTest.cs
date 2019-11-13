@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
+using WorkflowCore.Services.DefinitionStorage;
 
 namespace WorkflowCore.Testing
 {
@@ -55,7 +56,7 @@ namespace WorkflowCore.Testing
 
         public string StartWorkflow(string json, object data)
         {
-            var def = DefinitionLoader.LoadDefinition(json);
+            var def = DefinitionLoader.LoadDefinition(json, Deserializers.Json);
             var workflowId = Host.StartWorkflow(def.Id, data).Result;
             return workflowId;
         }

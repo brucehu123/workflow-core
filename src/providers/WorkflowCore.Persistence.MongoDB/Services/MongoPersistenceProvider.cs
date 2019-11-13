@@ -1,13 +1,11 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
+﻿using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.IdGenerators;
-using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
+using MongoDB.Driver.Linq;
 using WorkflowCore.Interface;
 using WorkflowCore.Models;
 
@@ -15,6 +13,7 @@ namespace WorkflowCore.Persistence.MongoDB.Services
 {
     public class MongoPersistenceProvider : IPersistenceProvider
     {
+        internal const string WorkflowCollectionName = "wfc.workflows";
         private readonly IMongoDatabase _database;
 
         public MongoPersistenceProvider(IMongoDatabase database)
@@ -79,7 +78,7 @@ namespace WorkflowCore.Persistence.MongoDB.Services
             }
         }
 
-        private IMongoCollection<WorkflowInstance> WorkflowInstances => _database.GetCollection<WorkflowInstance>("wfc.workflows");
+        private IMongoCollection<WorkflowInstance> WorkflowInstances => _database.GetCollection<WorkflowInstance>(WorkflowCollectionName);
 
         private IMongoCollection<EventSubscription> EventSubscriptions => _database.GetCollection<EventSubscription>("wfc.subscriptions");
 
@@ -127,7 +126,7 @@ namespace WorkflowCore.Persistence.MongoDB.Services
 
         public async Task<IEnumerable<WorkflowInstance>> GetWorkflowInstances(WorkflowStatus? status, string type, DateTime? createdFrom, DateTime? createdTo, int skip, int take)
         {
-            IQueryable<WorkflowInstance> result = WorkflowInstances.AsQueryable();
+            IMongoQueryable<WorkflowInstance> result = WorkflowInstances.AsQueryable();
 
             if (status.HasValue)
                 result = result.Where(x => x.Status == status.Value);
@@ -141,7 +140,7 @@ namespace WorkflowCore.Persistence.MongoDB.Services
             if (createdTo.HasValue)
                 result = result.Where(x => x.CreateTime <= createdTo.Value);
 
-            return result.Skip(skip).Take(take).ToList();
+            return await result.Skip(skip).Take(take).ToListAsync();
         }
 
         public async Task<string> CreateEventSubscription(EventSubscription subscription)
